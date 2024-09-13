@@ -1,0 +1,8 @@
+package com.example.runningapp.ui.fragments
+
+import androidx.fragment.app.Fragment
+import com.example.runningapp.R
+
+class SettingFragment : Fragment(R.layout.fragment_setting) {
+
+}
