@@ -25,6 +25,7 @@ playServicesMaps = "19.0.0"
 roomRuntime = "2.6.1"
 ksp = "1.9.0-1.0.13"
 timber = "5.0.1"
+lifecycleService = "2.8.5"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -63,6 +64,7 @@ mpandroidchart = { module = "com.github.PhilJay:MPAndroidChart", version.ref = "
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMaps" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
+androidx-lifecycle-service = { group = "androidx.lifecycle", name = "lifecycle-service", version.ref = "lifecycleService" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

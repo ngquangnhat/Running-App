@@ -1,11 +1,13 @@
 package com.example.runningapp.ui
 
 import android.Manifest
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -16,6 +18,7 @@ import androidx.navigation.ui.setupWithNavController
 import com.example.runningapp.R
 import com.example.runningapp.databinding.ActivityMainBinding
 import com.example.runningapp.db.RunDAO
+import com.example.runningapp.others.Constants.ACTION_SHOW_TRACKING_FRAGMENT
 import com.example.runningapp.others.Constants.REQUEST_CODE_LOCATION_PERMISSION
 import com.example.runningapp.others.TrackingUtility
 import dagger.hilt.android.AndroidEntryPoint
@@ -27,6 +30,7 @@ import javax.inject.Inject
 class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
     private lateinit var binding: ActivityMainBinding
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,6 +44,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
             insets
         }
 
+        navigateToTrackingFragmentIfNeeded(intent)
         setSupportActionBar(binding.toolbar)
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
         val navController = navHostFragment.navController
@@ -56,6 +61,20 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
         }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        navigateToTrackingFragmentIfNeeded(intent)
+    }
+
+    private fun navigateToTrackingFragmentIfNeeded(intent: Intent?){
+        if (intent?.action == ACTION_SHOW_TRACKING_FRAGMENT){
+            val navHostFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
+            val navController = navHostFragment.navController
+            navController.navigate(R.id.action_global_tracking_fragment)
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun requestLocationPermissions(bgLocation: Boolean = false) {
         if (TrackingUtility.hasLocationPermissions(this)) {
             return
@@ -65,6 +84,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
                 this,
                 "You need to \"Allow all the time\" to track runs in background.",
                 REQUEST_CODE_LOCATION_PERMISSION,
+                Manifest.permission.POST_NOTIFICATIONS,
                 Manifest.permission.ACCESS_BACKGROUND_LOCATION
             )
         } else {
@@ -72,6 +92,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
                 this,
                 "You need to accept location permissions to use this app.",
                 REQUEST_CODE_LOCATION_PERMISSION,
+                Manifest.permission.POST_NOTIFICATIONS,
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.ACCESS_FINE_LOCATION,
             )
@@ -82,6 +103,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     override fun onPermissionsGranted(requestCode: Int, perms: MutableList<String>) {
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onPermissionsDenied(requestCode: Int, perms: MutableList<String>) {
         if (EasyPermissions.somePermissionPermanentlyDenied(this, perms)) {
             AppSettingsDialog.Builder(this).build().show()

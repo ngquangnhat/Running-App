@@ -14,7 +14,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.runningapp"
-        minSdk = 26
+        minSdk = 21
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -56,6 +56,7 @@ dependencies {
 
     // Room
     implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.lifecycle.service)
     ksp(libs.androidx.room.compiler)
 
     // Kotlin Extensions and Coroutines support for Room
