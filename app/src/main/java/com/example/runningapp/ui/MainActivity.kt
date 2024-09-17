@@ -50,6 +50,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
         val navController = navHostFragment.navController
 
         binding.bottomNavigationView.setupWithNavController(navController)
+        binding.bottomNavigationView.setOnItemReselectedListener { /* NO-OP*/ }
 
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {

@@ -16,7 +16,6 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.example.runningapp.R
-import com.example.runningapp.databinding.FragmentRunBinding
 import com.example.runningapp.databinding.FragmentTrackingBinding
 import com.example.runningapp.db.Run
 import com.example.runningapp.others.Constants.ACTION_PAUSE_SERVICE
@@ -27,21 +26,19 @@ import com.example.runningapp.others.Constants.POLYLINE_COLOR
 import com.example.runningapp.others.Constants.POLYLINE_WIDTH
 import com.example.runningapp.others.TrackingUtility
 import com.example.runningapp.services.Polyline
-import com.example.runningapp.services.Polylines
 import com.example.runningapp.services.TrackingService
 import com.example.runningapp.ui.MainActivity
 import com.example.runningapp.ui.viewmodels.MainViewModel
-import com.example.runningapp.ui.viewmodels.StatisticsViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.PolylineOptions
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.dialog.MaterialDialogs
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlin.math.round
+
+const val CANCEL_TRACKING_DIALOG_TAG = "CancelDialog"
 
 @AndroidEntryPoint
 class TrackingFragment : Fragment(R.layout.fragment_tracking) {
@@ -53,7 +50,7 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
     private var map: GoogleMap? = null
     private var curTimeInMillis = 0L
 
-    private var menu : Menu ?= null
+    private var menu: Menu? = null
 
     @set:Inject
     var weight = 80f
@@ -82,6 +79,14 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
             toggleRun()
         }
 
+        if (savedInstanceState != null) {
+            val cancelTrackingDialog = parentFragmentManager.findFragmentByTag(
+                CANCEL_TRACKING_DIALOG_TAG ) as CancelTrackingDialog
+            cancelTrackingDialog.setYesListener {
+                stopRun()
+            }
+        }
+
         binding.btnFinishRun.setOnClickListener {
             zoomToWholeTrack()
             endRunAndSaveToDb()
@@ -102,13 +107,14 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
                         showCancelTrackingDialog()
                         true
                     }
+
                     else -> false
                 }
             }
         })
     }
 
-    private fun subscribeToObservers(){
+    private fun subscribeToObservers() {
         TrackingService.isTracking.observe(viewLifecycleOwner, Observer {
             updateTracking(it)
         })
@@ -125,29 +131,25 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
         })
     }
 
-    private fun toggleRun(){
-        if (isTracking){
+    private fun toggleRun() {
+        if (isTracking) {
             menu?.getItem(0)?.isVisible = true
             sendCommandToService(ACTION_PAUSE_SERVICE)
-        }else{
+        } else {
             sendCommandToService(ACTION_START_OR_RESUME_SERVICE)
         }
     }
 
-    private fun showCancelTrackingDialog(){
-        val dialog = MaterialAlertDialogBuilder(requireContext(), R.style.AlertDialogTheme)
-            .setTitle("Cancel the Run ?")
-            .setMessage("Are you sure to cancel the current run and delete all its data?")
-            .setIcon(R.drawable.ic_delete)
-            .setPositiveButton("Yes"){_,_ ->
+    private fun showCancelTrackingDialog() {
+        CancelTrackingDialog().apply {
+            setYesListener {
                 stopRun()
             }
-            .setNegativeButton("No",null)
-            .create()
-        dialog.show()
+        }.show(parentFragmentManager, CANCEL_TRACKING_DIALOG_TAG)
     }
 
-    private fun stopRun(){
+    private fun stopRun() {
+        binding.tvTimer.text = "00:00:00:00"
         sendCommandToService(ACTION_STOP_SERVICE)
         findNavController().navigate(R.id.action_trackingFragment_to_runFragment)
         menu?.getItem(0)?.isVisible = false
@@ -155,12 +157,12 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
 
     }
 
-    private fun updateTracking(isTracking:Boolean){
+    private fun updateTracking(isTracking: Boolean) {
         this.isTracking = isTracking
-        if(!isTracking){
+        if (!isTracking && curTimeInMillis > 0L) {
             binding.btnToggleRun.text = "Start"
             binding.btnFinishRun.visibility = View.VISIBLE
-        }else{
+        } else if (isTracking) {
             binding.btnToggleRun.text = "Stop"
             menu?.getItem(0)?.isVisible = true
             binding.btnFinishRun.visibility = View.GONE
@@ -178,10 +180,10 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
         }
     }
 
-    private fun zoomToWholeTrack(){
+    private fun zoomToWholeTrack() {
         val bounds = LatLngBounds.Builder()
-        for (polyline in pathPoints){
-            for(pos in polyline){
+        for (polyline in pathPoints) {
+            for (pos in polyline) {
                 bounds.include(pos)
             }
         }
@@ -195,16 +197,18 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
         )
     }
 
-    private fun endRunAndSaveToDb(){
-        map?.snapshot {bmp->
+    private fun endRunAndSaveToDb() {
+        map?.snapshot { bmp ->
             var distanceInMeters = 0
-            for(polyline in pathPoints){
+            for (polyline in pathPoints) {
                 distanceInMeters += TrackingUtility.caculatePolylineLength(polyline).toInt()
             }
-            val avgSpeed = round((distanceInMeters / 1000f) / (curTimeInMillis / 1000f / 60 / 60) *10) /10f
+            val avgSpeed =
+                round((distanceInMeters / 1000f) / (curTimeInMillis / 1000f / 60 / 60) * 10) / 10f
             val dateTimestamp = java.util.Calendar.getInstance().timeInMillis
             val caloriesBurned = ((distanceInMeters / 1000f) * weight).toInt()
-            val run = Run(bmp,dateTimestamp,avgSpeed,distanceInMeters,curTimeInMillis,caloriesBurned)
+            val run =
+                Run(bmp, dateTimestamp, avgSpeed, distanceInMeters, curTimeInMillis, caloriesBurned)
 
             viewModel.insertRun(run)
             Snackbar.make(
@@ -216,8 +220,8 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
         }
     }
 
-    private fun addAllPolylines(){
-        for (polyline in pathPoints){
+    private fun addAllPolylines() {
+        for (polyline in pathPoints) {
             val polylineOptions = PolylineOptions()
                 .color(POLYLINE_COLOR)
                 .width(POLYLINE_WIDTH)
@@ -227,7 +231,7 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
     }
 
     private fun addLatestPolyline() {
-        if(pathPoints.isNotEmpty() && pathPoints.last().size > 1){
+        if (pathPoints.isNotEmpty() && pathPoints.last().size > 1) {
             val preLastLatLng = pathPoints.last()[pathPoints.last().size - 2]
             val lastLatLng = pathPoints.last().last()
             val polylineOptions = PolylineOptions()
@@ -240,7 +244,7 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
         }
     }
 
-    private fun sendCommandToService(action:String) =
+    private fun sendCommandToService(action: String) =
         Intent(requireContext(), TrackingService::class.java).also {
             it.action = action
             requireContext().startService(it)
