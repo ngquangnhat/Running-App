@@ -14,7 +14,9 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.runningapp.R
 import com.example.runningapp.adapters.RunAdapter
 import com.example.runningapp.databinding.FragmentRunBinding
@@ -23,6 +25,7 @@ import com.example.runningapp.others.SortType
 import com.example.runningapp.others.TrackingUtility
 import com.example.runningapp.ui.MainActivity
 import com.example.runningapp.ui.viewmodels.MainViewModel
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
@@ -51,21 +54,21 @@ class RunFragment : Fragment(R.layout.fragment_run) {
         (activity as MainActivity).requestLocationPermissions()
         setUpRecycleView()
 
-        when(viewModel.sortType){
-            SortType.DATE ->binding.spFilter.setSelection(0)
-            SortType.RUNNING_TIME ->binding.spFilter.setSelection(1)
-            SortType.DISTANCE ->binding.spFilter.setSelection(2)
-            SortType.AVG_SPEED ->binding.spFilter.setSelection(3)
-            SortType.CALORIES_BURNED ->binding.spFilter.setSelection(4)
+        when (viewModel.sortType) {
+            SortType.DATE -> binding.spFilter.setSelection(0)
+            SortType.RUNNING_TIME -> binding.spFilter.setSelection(1)
+            SortType.DISTANCE -> binding.spFilter.setSelection(2)
+            SortType.AVG_SPEED -> binding.spFilter.setSelection(3)
+            SortType.CALORIES_BURNED -> binding.spFilter.setSelection(4)
         }
-        binding.spFilter.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
+        binding.spFilter.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
                 adapterView: AdapterView<*>?,
                 view: View?,
                 position: Int,
                 id: Long
             ) {
-                when(position){
+                when (position) {
                     0 -> viewModel.sortRuns(SortType.DATE)
                     1 -> viewModel.sortRuns(SortType.RUNNING_TIME)
                     2 -> viewModel.sortRuns(SortType.DISTANCE)
@@ -84,6 +87,34 @@ class RunFragment : Fragment(R.layout.fragment_run) {
 
         binding.fab.setOnClickListener {
             findNavController().navigate(R.id.action_runFragment_to_trackingFragment)
+        }
+
+        val itemTouchCallback = object : ItemTouchHelper.SimpleCallback(
+            ItemTouchHelper.UP or ItemTouchHelper.DOWN,
+            ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+        ) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                return true
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+               val position = viewHolder.layoutPosition
+                val run = runAdapter.differ.currentList[position]
+                viewModel.deleteRun(run)
+                Snackbar.make(view, "Successfully deleted run", Snackbar.LENGTH_LONG).apply {
+                    setAction("Undo") {
+                        viewModel.insertRun(run)
+                    }
+                    show()
+                }
+            }
+        }
+        ItemTouchHelper(itemTouchCallback).apply {
+            attachToRecyclerView(binding.rvRuns)
         }
     }
 

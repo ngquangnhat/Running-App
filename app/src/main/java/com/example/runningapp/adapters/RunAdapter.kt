@@ -49,7 +49,7 @@ class RunAdapter : RecyclerView.Adapter<RunAdapter.RunViewHolder> () {
         }
     }
 
-    private val differ = AsyncListDiffer(this, diffCallback)
+    val differ = AsyncListDiffer(this, diffCallback)
 
     fun submitList(list: List<Run>) = differ.submitList(list)
 

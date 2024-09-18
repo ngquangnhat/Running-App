@@ -106,7 +106,7 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
                 }
                 binding.barChart.data = BarData(barDataSet)
 
-                val customMarkerView = CustomMarkerView(it.reversed(), requireContext(), R.layout.marker_view)
+                val customMarkerView = CustomMarkerView(it, requireContext(), R.layout.marker_view)
                 binding.barChart.marker = customMarkerView
                 binding.barChart.invalidate()
             }

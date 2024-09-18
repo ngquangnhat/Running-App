@@ -19,11 +19,16 @@ class MainViewModel @Inject constructor(
         mainRepository.insertRun(run)
     }
 
+    fun deleteRun(run: Run) = viewModelScope.launch {
+        mainRepository.deleteRun(run)
+    }
+
     private val runSortedByDate = mainRepository.getAllRunsSortedByDate()
     private val runSortedByDistance = mainRepository.getAllRunsSortedByDistance()
     private val runSortedByCaloriesBurned = mainRepository.getAllRunSortedByCalories()
     private val runSortedByTimesInMillis = mainRepository.getAllRunsSortedByTimeInMillis()
     private val runSortedAvgSpeed = mainRepository.getAllRunSortedByAvgSpeed()
+
 
     val runs = MediatorLiveData<List<Run>>()
 
