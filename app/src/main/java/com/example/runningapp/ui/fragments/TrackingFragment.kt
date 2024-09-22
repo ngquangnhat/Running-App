@@ -81,7 +81,8 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
 
         if (savedInstanceState != null) {
             val cancelTrackingDialog = parentFragmentManager.findFragmentByTag(
-                CANCEL_TRACKING_DIALOG_TAG ) as CancelTrackingDialog
+                CANCEL_TRACKING_DIALOG_TAG
+            ) as CancelTrackingDialog
             cancelTrackingDialog.setYesListener {
                 stopRun()
             }
@@ -146,6 +147,7 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
                 stopRun()
             }
         }.show(parentFragmentManager, CANCEL_TRACKING_DIALOG_TAG)
+
     }
 
     private fun stopRun() {

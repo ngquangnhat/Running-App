@@ -45,19 +45,19 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
         }
 
         navigateToTrackingFragmentIfNeeded(intent)
+
         setSupportActionBar(binding.toolbar)
-        val navHostFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
-        val navController = navHostFragment.navController
 
-        binding.bottomNavigationView.setupWithNavController(navController)
-        binding.bottomNavigationView.setOnItemReselectedListener { /* NO-OP*/ }
+        binding.navHostFragment.post {
+            val navController = binding.navHostFragment.findNavController()
+            binding.bottomNavigationView.setupWithNavController(navController)
 
-        navController.addOnDestinationChangedListener { _, destination, _ ->
-            when (destination.id) {
-                R.id.settingFragment, R.id.runFragment, R.id.statisticsFragment ->
-                    binding.bottomNavigationView.visibility = View.VISIBLE
-
-                else -> binding.bottomNavigationView.visibility = View.GONE
+            navController.addOnDestinationChangedListener { _, destination, _ ->
+                when (destination.id) {
+                    R.id.settingFragment, R.id.runFragment, R.id.statisticsFragment ->
+                        binding.bottomNavigationView.visibility = View.VISIBLE
+                    else -> binding.bottomNavigationView.visibility = View.GONE
+                }
             }
         }
     }
@@ -68,10 +68,10 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     }
 
     private fun navigateToTrackingFragmentIfNeeded(intent: Intent?){
-        if (intent?.action == ACTION_SHOW_TRACKING_FRAGMENT){
-            val navHostFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
-            val navController = navHostFragment.navController
-            navController.navigate(R.id.action_global_tracking_fragment)
+        binding.navHostFragment.post {
+            if (intent?.action == ACTION_SHOW_TRACKING_FRAGMENT) {
+                binding.navHostFragment.findNavController().navigate(R.id.action_global_tracking_fragment)
+            }
         }
     }
 
